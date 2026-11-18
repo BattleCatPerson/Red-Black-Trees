@@ -15,14 +15,30 @@ public class RedBlackTree : MonoBehaviour
     [SerializeField] float yOffset;
     [SerializeField] int maxLevel = -1;
     [SerializeField] List<Node> activeNodes;
+    [SerializeField] List<Node> nodes;
+    [SerializeField] int n;
     void Start()
     {
         root = null;
+        GenerateTree();
     }
 
     void Update()
     {
 
+    }
+    public void GenerateTree()
+    {
+        int h = (int)Mathf.Ceil(Mathf.Log(n, 2));
+        for (int i = 0; i <= h; i++)
+        {
+            for (int j = 0; j < Mathf.Pow(2, i); j++)
+            {
+                var inst = Instantiate(nodeInstance, transform);
+                inst.name = "Height: " + i.ToString() + " Number: " + (j + 1).ToString();
+            }
+        }
+        Debug.Log(h);
     }
     public void CreateNode()
     {
@@ -59,10 +75,14 @@ public class RedBlackTree : MonoBehaviour
             if (node.parent != null)
             {
                 float offset = xOffset;
-                if (node.level < 2)
+                if (node.level == maxLevel - 1)
                 {
-                    offset = xOffset * Mathf.Max(levelMultiplier * (maxLevel - node.level), 1);
+                    offset /= 2;
                 }
+                //if (node.level < 2)
+                //{
+                //    offset = xOffset * Mathf.Max(levelMultiplier * (maxLevel - node.level), 1);
+                //}
                 if (node.parent.right == node)
                 {
                     t.localPosition = new Vector2(offset, -yOffset);

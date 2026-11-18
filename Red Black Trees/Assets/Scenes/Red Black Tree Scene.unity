@@ -624,6 +624,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1048258014}
   - component: {fileID: 1048258015}
+  - component: {fileID: 1048258016}
   m_Layer: 5
   m_Name: Red Black Tree
   m_TagString: Untagged
@@ -671,6 +672,20 @@ MonoBehaviour:
   yOffset: 50
   maxLevel: 0
   activeNodes: []
+  nodes: []
+  n: 3
+--- !u!225 &1048258016
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048258013}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &1050727288
 GameObject:
   m_ObjectHideFlags: 0
