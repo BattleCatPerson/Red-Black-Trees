@@ -32,6 +32,14 @@ public class Node : MonoBehaviour
     {
         isLeaf = true;
     }
+    public void SetParent(Node parent)
+    {
+        if (parent != null)
+        {
+            transform.parent = parent.transform;
+        }
+        this.parent = parent;
+    }
     public void SetColor(TreeColor color)
     {
         if (color == TreeColor.Black)
