@@ -51,5 +51,16 @@ public class Node : MonoBehaviour
             image.color = Color.red;
         }
     }
+    public void SetLevel()
+    {
+        if (parent != null)
+        {
+            level = parent.level + 1;
+        }
+        else
+        {
+            level = 0;
+        }
+    }
 
 }

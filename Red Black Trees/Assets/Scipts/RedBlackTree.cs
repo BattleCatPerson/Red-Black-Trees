@@ -56,6 +56,7 @@ public class RedBlackTree : MonoBehaviour
             int key = int.Parse(inputField.text);
             Node instance = Instantiate(nodeInstance, transform);
             instance.Initialize(null, null, null, TreeColor.Black, key);
+            instance.name = key.ToString();
             RBTreeInsert(instance);
         }
     }
@@ -102,6 +103,13 @@ public class RedBlackTree : MonoBehaviour
             {
                 t.localPosition = Vector2.zero;
             }
+        }
+    }
+    public void SetLevels()
+    {
+        foreach (Node node in activeNodes)
+        {
+            node.SetLevel();
         }
     }
     public void CreateLeaves(Node parent)
@@ -250,11 +258,21 @@ public class RedBlackTree : MonoBehaviour
     public void RightRotate(Node x)
     {
         Node y = x.left;
-        x.left = y.right;
-        if (!IsLeaf(y.right))
+        if (x.parent == null)
         {
-            y.right.SetParent(x);
+            y.transform.parent = transform;
+            x.transform.parent = transform;
         }
+        else
+        {
+            y.transform.parent = x.transform.parent;
+        }
+
+        x.left = y.right;
+        //if (!IsLeaf(y.right))
+        //{
+        y.right.SetParent(x);
+        //}
         y.SetParent(x.parent);
         if (x.parent == null)
         {
@@ -270,16 +288,28 @@ public class RedBlackTree : MonoBehaviour
         }
         y.right = x;
         x.SetParent(y);
+        x.SetLevel();
+        y.SetLevel();
+        SetLevels();
         ReadjustOffset();
     }
     public void LeftRotate(Node x)
     {
         Node y = x.right;
         x.right = y.left;
-        if (!IsLeaf(y.left))
+        if (x.parent == null)
         {
-            y.left.SetParent(x);
+            y.transform.parent = transform;
+            x.transform.parent = transform;
         }
+        else
+        {
+            y.transform.parent = x.transform.parent;
+        }
+        //if (!IsLeaf(y.left))
+        //{
+            y.left.SetParent(x);
+        //}
         y.parent = x.parent;
         if (x.parent == null)
         {
@@ -295,6 +325,9 @@ public class RedBlackTree : MonoBehaviour
         }
         y.left = x;
         x.SetParent(y);
+        x.SetLevel();
+        y.SetLevel();
+        SetLevels();
         ReadjustOffset();
     }
 }
