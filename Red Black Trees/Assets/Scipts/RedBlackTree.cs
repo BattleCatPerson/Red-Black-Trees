@@ -10,6 +10,7 @@ public class RedBlackTree : MonoBehaviour
     [SerializeField] Node nodeInstance;
     [SerializeField] Node leafInstance;
     [SerializeField] TMP_InputField inputField;
+    [SerializeField] TMP_InputField deleteInputField;
     [SerializeField] float xOffset;
     [SerializeField] float levelMultiplier;
     [SerializeField] float yOffset;
@@ -322,5 +323,181 @@ public class RedBlackTree : MonoBehaviour
         //y.left.SetLevel();
         SetLevels(root);
         ReadjustOffset();
+    }
+    public void RBTransplant(Node u, Node v)
+    {
+        Debug.Log(" U PARENT" + u.transform.parent + "V PARENT" + v.transform.parent);
+        v.transform.parent = u.transform.parent;
+        if (u.parent == null)
+        {
+            root = v;
+        }
+        else if (u == u.parent.left)
+        {
+            u.parent.left = v;
+        }
+        else
+        {
+            u.parent.right = v;
+        }
+        v.SetParent(u.parent);
+        activeNodes.Remove(u);
+        Destroy(u.gameObject);
+        SetLevels(root);
+        ReadjustOffset();
+    }
+    public void TestTransplant()
+    {
+        RBTransplant(root, root.right.right.left);
+    }
+    public void RBDelete(Node z)
+    {
+        Node y = z;
+        Node x;
+        TreeColor c = y.color;
+        if (IsLeaf(z.left))
+        {
+            x = z.right;
+            RBTransplant(z, z.right);
+        }
+        else if (IsLeaf(z.right))
+        {
+            x = z.left;
+            RBTransplant(z, z.left);
+        }
+        else
+        {
+            y = TreeMin(z.right);
+            c = y.color;
+            x = y.right;
+            if (y.parent == z)
+            {
+                x.parent = y;
+            }
+            else
+            {
+                RBTransplant(y, y.right);
+                y.right = z.right;
+                y.right.parent = y;
+            }
+            RBTransplant(z, y);
+            y.left = z.left;
+            y.left.parent = y;
+            y.color = z.color;
+        }
+        if (c == TreeColor.Black)
+        {
+            RBDeleteFixUp(x);
+        }
+    }
+    public void RBDeleteFixUp(Node x)
+    {
+        while (x != root && x.color == TreeColor.Black)
+        {
+            Node p = x.parent;
+            if (x == p.left)
+            {
+                Node s = p.right;
+                if (s.color == TreeColor.Red)
+                {
+                    s.SetColor(TreeColor.Black);
+                    p.SetColor(TreeColor.Red);
+                    LeftRotate(p);
+                    s = p.right;
+                }
+                if (s.left.color == TreeColor.Black && s.right.color == TreeColor.Black)
+                {
+                    s.SetColor(TreeColor.Red);
+                    x = p;
+                }
+                else
+                {
+                    if (s.right.color == TreeColor.Black)
+                    {
+                        s.left.SetColor(TreeColor.Black);
+                        s.SetColor(TreeColor.Red);
+                        RightRotate(s);
+                        s = p.right;
+                    }
+                    s.SetColor(p.color);
+                    p.SetColor(TreeColor.Black);
+                    s.right.SetColor(TreeColor.Black);
+                    LeftRotate(p);
+                    x = root;
+                }
+            }
+            else
+            {
+                Node s = p.left;
+                if (s.color == TreeColor.Red)
+                {
+                    s.SetColor(TreeColor.Black);
+                    p.SetColor(TreeColor.Red);
+                    RightRotate(p);
+                    s = p.left;
+                }
+                if (s.left.color == TreeColor.Black && s.right.color == TreeColor.Black)
+                {
+                    s.SetColor(TreeColor.Red);
+                    x = p;
+                }
+                else
+                {
+                    if (s.left.color == TreeColor.Black)
+                    {
+                        s.right.SetColor(TreeColor.Black);
+                        s.SetColor(TreeColor.Red);
+                        LeftRotate(s);
+                        s = p.left;
+                    }
+                    s.SetColor(p.color);
+                    p.SetColor(TreeColor.Black);
+                    s.left.SetColor(TreeColor.Black);
+                    RightRotate(p);
+                    x = root;
+                }
+            }
+        }
+        x.SetColor(TreeColor.Black);
+    }
+    public Node TreeMin(Node x)
+    {
+        while (!IsLeaf(x.left))
+        {
+            x = x.left;
+        }
+        return x;
+    }
+    public Node TreeSearch(Node x, int K)
+    {
+        if (IsLeaf(x) || K == x.key)
+        {
+            return x;
+        }
+        else if (K < x.key)
+        {
+            return TreeSearch(x.left, K);
+        }
+        else
+        {
+            return TreeSearch(x.right, K);
+        }
+    }
+    public void Delete()
+    {
+        if (inputField.text != "")
+        {
+            int key = int.Parse(deleteInputField.text);
+            Node n = TreeSearch(root, key);
+            if (!IsLeaf(n))
+            {
+                RBDelete(n);
+            }
+            else
+            {
+                Debug.Log("NOT IN TREE!");
+            }
+        }
+
     }
 }
