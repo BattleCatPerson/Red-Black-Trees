@@ -10,7 +10,16 @@ public class RedBlackTree : MonoBehaviour
     [SerializeField] Node nodeInstance;
     [SerializeField] Node leafInstance;
     [SerializeField] TMP_InputField inputField;
+    [SerializeField] FadeText createFailed;
     [SerializeField] TMP_InputField deleteInputField;
+    [SerializeField] FadeText deleteFailed;
+    [SerializeField] TMP_InputField searchInputField;
+    [SerializeField] FadeText searchFailed;
+    [SerializeField] float highlightDuration;
+    [SerializeField] float failureDuration;
+    [SerializeField] TextMeshProUGUI traversalText;
+    [SerializeField] float timeBetweenTraversal;
+    [SerializeField] bool traversing;
     [SerializeField] float xOffset;
     [SerializeField] float levelMultiplier;
     [SerializeField] float yOffset;
@@ -18,6 +27,7 @@ public class RedBlackTree : MonoBehaviour
     [SerializeField] List<Node> activeNodes;
     [SerializeField] List<Node> nodes;
     [SerializeField] int n;
+    [SerializeField] Node nodeToDelete;
     void Start()
     {
         root = null;
@@ -25,7 +35,16 @@ public class RedBlackTree : MonoBehaviour
 
     void Update()
     {
-
+        if (nodeToDelete != null)
+        {
+            activeNodes.Remove(nodeToDelete);
+            Destroy(nodeToDelete.gameObject);
+        }
+        if (root != null && IsLeaf(root))
+        {
+            activeNodes.Clear();
+            Destroy(root.gameObject);
+        }
     }
     public void RotateRightRoot()
     {
@@ -41,10 +60,17 @@ public class RedBlackTree : MonoBehaviour
         {
             Debug.Log(inputField.text);
             int key = int.Parse(inputField.text);
-            Node instance = Instantiate(nodeInstance, transform);
-            instance.Initialize(null, null, null, TreeColor.Black, key);
-            instance.name = key.ToString();
-            RBTreeInsert(instance);
+            if (IsLeaf(TreeSearch(root, key)))
+            {
+                Node instance = Instantiate(nodeInstance, transform);
+                instance.Initialize(null, null, null, TreeColor.Black, key);
+                instance.name = key.ToString();
+                RBTreeInsert(instance);
+            }
+            else
+            {
+                createFailed.SetTimer(failureDuration);
+            }
         }
     }
 
@@ -52,23 +78,26 @@ public class RedBlackTree : MonoBehaviour
     {
         foreach (Node node in activeNodes)
         {
-            Transform t = node.transform;
-            if (node.parent != null)
+            if (node != null)
             {
-                float offset = xOffset;
-                offset = xOffset * Mathf.Pow(levelMultiplier, maxLevel - node.level);
-                if (node.parent.right == node)
+                Transform t = node.transform;
+                if (node.parent != null)
                 {
-                    t.localPosition = new Vector2(offset, -yOffset);
+                    float offset = xOffset;
+                    offset = xOffset * Mathf.Pow(levelMultiplier, maxLevel - node.level);
+                    if (node.parent.right == node)
+                    {
+                        t.localPosition = new Vector2(offset, -yOffset);
+                    }
+                    else
+                    {
+                        t.localPosition = new Vector2(-offset, -yOffset);
+                    }
                 }
                 else
                 {
-                    t.localPosition = new Vector2(-offset, -yOffset);
+                    t.localPosition = Vector2.zero;
                 }
-            }
-            else
-            {
-                t.localPosition = Vector2.zero;
             }
         }
     }
@@ -117,6 +146,23 @@ public class RedBlackTree : MonoBehaviour
         activeNodes.Add(rightLeaf);
         //Offset(leftLeaf.transform, true, true);
         //Offset(rightLeaf.transform, false, true);
+    }
+    public void DeleteInactive()
+    {
+        List<Node> toDelete = new List<Node>();
+        foreach (Node n in activeNodes)
+        {
+            if (n.parent != null && n.parent.left != n && n.parent.right != n)
+            {
+                toDelete.Add(n);
+            }
+        }
+        foreach (Node n in toDelete)
+        {
+            activeNodes.Remove(n);
+            Destroy(n.gameObject);
+        }
+
     }
     public void RBTreeInsert(Node z)
     {
@@ -341,15 +387,15 @@ public class RedBlackTree : MonoBehaviour
             u.parent.right = v;
         }
         v.SetParent(u.parent);
-        activeNodes.Remove(u);
-        Destroy(u.gameObject);
+        //activeNodes.Remove(u);
+        //Destroy(u.gameObject);
         SetLevels(root);
         ReadjustOffset();
     }
-    public void TestTransplant()
-    {
-        RBTransplant(root, root.right.right.left);
-    }
+    //public void TestTransplant()
+    //{
+    //    RBTransplant(root.right, root.right.right);
+    //}
     public void RBDelete(Node z)
     {
         Node y = z;
@@ -377,18 +423,25 @@ public class RedBlackTree : MonoBehaviour
             else
             {
                 RBTransplant(y, y.right);
+                y.transform.parent = z.transform.parent;
+                z.right.transform.parent = y.transform.parent;
                 y.right = z.right;
-                y.right.parent = y;
+                y.right.SetParent(y);
             }
             RBTransplant(z, y);
+            z.left.transform.parent = z.transform.parent;
+            z.left.SetParent(y);
             y.left = z.left;
-            y.left.parent = y;
-            y.color = z.color;
+            //y.left.parent = y;
+            y.SetColor(z.color);
         }
         if (c == TreeColor.Black)
         {
             RBDeleteFixUp(x);
         }
+        ReadjustOffset();
+        nodeToDelete = z;
+        DeleteInactive();
     }
     public void RBDeleteFixUp(Node x)
     {
@@ -483,6 +536,22 @@ public class RedBlackTree : MonoBehaviour
             return TreeSearch(x.right, K);
         }
     }
+    public void Search()
+    {
+        if (inputField.text != "")
+        {
+            int key = int.Parse(searchInputField.text);
+            Node n = TreeSearch(root, key);
+            if (!IsLeaf(n))
+            {
+                n.Highlight(highlightDuration);
+            }
+            else
+            {
+                searchFailed.SetTimer(failureDuration);
+            }
+        }
+    }
     public void Delete()
     {
         if (inputField.text != "")
@@ -495,9 +564,52 @@ public class RedBlackTree : MonoBehaviour
             }
             else
             {
-                Debug.Log("NOT IN TREE!");
+                deleteFailed.SetTimer(failureDuration);
             }
         }
 
+    }
+    public List<Node> InOrderTraversal(Node n)
+    {
+        List<Node> result = new List<Node>();
+        // left, root, right
+        if (!IsLeaf(n))
+        {
+            if (!IsLeaf(n.left))
+            {
+                result.AddRange(InOrderTraversal(n.left));
+            }
+            result.Add(n);
+            if (!IsLeaf(n.right))
+            {
+                result.AddRange(InOrderTraversal(n.right));
+            }
+        }
+        return result;
+    }
+    public void InOrder()
+    {
+        if (!traversing)
+        {
+            List<Node> result = InOrderTraversal(root);
+            string travel = "";
+            for (int i = 0; i < result.Count - 1; i++)
+            {
+                travel += result[i].name + ", ";
+            }
+            travel += result[result.Count - 1].name;
+            traversalText.text = travel;
+            StartCoroutine(Traverse(result));
+        }
+    }
+    public IEnumerator Traverse(List<Node> nodes)
+    {
+        traversing = true;
+        foreach (Node n in nodes)
+        {
+            n.Highlight(highlightDuration);
+            yield return new WaitForSeconds(timeBetweenTraversal);
+        }
+        traversing = false;
     }
 }

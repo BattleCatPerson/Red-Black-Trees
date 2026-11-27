@@ -17,7 +17,11 @@ public class Node : MonoBehaviour
     public bool isLeaf = false;
     public int level;
     [SerializeField] Image image;
+    [SerializeField] Image highlightImage;
     [SerializeField] TextMeshProUGUI text;
+    [SerializeField] float highlightDuration;
+    [SerializeField] float highlightTimer;
+
     public void Initialize(Node parent, Node left, Node right, TreeColor color, int key)
     {
         this.parent = parent;
@@ -26,7 +30,20 @@ public class Node : MonoBehaviour
         this.color = color;
         this.key = key;
         text.text = key.ToString();
-        this.SetColor(color);
+        SetColor(color);
+        highlightImage.color = new Color(highlightImage.color.r, highlightImage.color.g, highlightImage.color.b, 0);
+    }
+    private void Update()
+    {
+        if (highlightTimer > 0)
+        {
+            highlightImage.color = new Color(highlightImage.color.r, highlightImage.color.g, highlightImage.color.b, Mathf.Lerp(0, 1, highlightTimer / highlightDuration));
+            highlightTimer -= Time.deltaTime;
+            if (highlightTimer <= 0)
+            {
+                highlightImage.color = new Color(highlightImage.color.r, highlightImage.color.g, highlightImage.color.b, 0);
+            }
+        }
     }
     public void CreateLeaf()
     {
@@ -52,17 +69,10 @@ public class Node : MonoBehaviour
         }
         this.color = color;
     }
-    //public void SetLevel()
-    //{
-    //    if (parent != null)
-    //    {
-    //        Debug.Log("Current node: " + name + " Parent node: " + parent.name + " Parent Level: " + parent.level);
-    //        level = parent.level + 1;
-    //    }
-    //    else
-    //    {
-    //        level = 0;
-    //    }
-    //}
+    public void Highlight(float duration)
+    {
+        highlightDuration = duration;
+        highlightTimer = duration;
+    }
 
 }
